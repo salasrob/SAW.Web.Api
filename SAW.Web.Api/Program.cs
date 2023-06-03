@@ -5,6 +5,7 @@ using SAW.Web.Business;
 using SAW.Web.Business.Security;
 using SAW.Web.Business.Security.Services;
 using SAW.Web.Business.Service;
+using SAW.Web.Business.Services;
 using SAW.Web.Data;
 using SAW.Web.Data.Repository;
 using SAW.Web.Entities.Config;
@@ -104,6 +105,7 @@ void ConfigureDataAccessLayer(IServiceCollection services)
 {
     services.AddSingleton<ITokenDataRepository, TokenDataRepository>();
     services.AddSingleton<IUsersDataRepository, UsersDataRepository>();
+    services.AddSingleton<IEmailDataRepository, EmailDataRepository>();
 }
 
 void ConfigureBusinessServicesLayer(IServiceCollection services)
@@ -112,5 +114,6 @@ void ConfigureBusinessServicesLayer(IServiceCollection services)
     services.AddSingleton<IAuthenticationBusinessService<int>, AuthenticationBusinessService>();
     services.AddSingleton<ITokenBusinessService, TokenBusinessService>();
     services.AddSingleton<IUsersBusinessService, UsersBusinessService>();
+    services.AddSingleton<IEmailerBusinessService, EmailerBusinessService>();
 }
 
