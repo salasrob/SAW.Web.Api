@@ -14,5 +14,6 @@ namespace SAW.Web.Business.Security
         Task LogOutAsync();
         bool IsLoggedIn();
         IUserAuthData GetCurrentUser();
+        string ExtractAuthorizationHeader();
     }
 }

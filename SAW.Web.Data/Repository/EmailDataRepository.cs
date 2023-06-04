@@ -9,7 +9,7 @@ namespace SAW.Web.Data.Repository
     {
         private readonly ILogger<EmailDataRepository> _logger;
         private readonly EmailClient _emailClient;
-        public EmailDataRepository(ILogger<EmailDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings)
+        public EmailDataRepository(ILogger<EmailDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings, logger)
         {
             _logger = logger;
             _emailClient = CreateEmailClient();

@@ -4,7 +4,7 @@ namespace SAW.Web.Data
 {
     public interface ITokenDataRepository
     {
-        Task<bool> CreateToken(AuthenticationToken userToken);
-        Task<AuthenticationToken> GetToken();
+        Task<bool> Create2FAToken(AuthenticationToken userToken);
+        Task<AuthenticationToken> GetToken(string authHeaderToken);
     }
 }

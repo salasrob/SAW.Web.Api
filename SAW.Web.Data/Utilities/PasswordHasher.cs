@@ -4,15 +4,14 @@ namespace SAW.Web.Data.Utilities
 {
     public class PasswordHasher
     {
-        public bool VerifyPassword(string claimedPassword, string userPassword)
+        public bool VerifyPassword(string claimedPassword, string passwordFromDatabase)
         {
-            return BCryptNet.Verify(claimedPassword, userPassword);
+            return BCryptNet.Verify(claimedPassword, passwordFromDatabase);
         }
 
         public string HashPassword(string password)
         {
-            string salt = BCryptNet.GenerateSalt(10);
-            return BCryptNet.HashPassword(password, salt);
+            return BCryptNet.HashPassword(password);
         }
     }
 }

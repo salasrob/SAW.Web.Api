@@ -1,14 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using System.ComponentModel.DataAnnotations;
+
 namespace SAW.Web.Entities.Requests
 {
     public class UserAddRequest
     {
+        public string FirstName { get; set; }
+        public string MiddleName { get; set; }
+        public string MiddleInitial { get; set; }
+        public string LastName { get; set; }
+
         [Required]
         [EmailAddress]
         [MaxLength(255)]
-        public string Email { get; set; }
+        public string UserName { get; set; }
 
         [Required]
         [StringLength(20, MinimumLength = 8)]
@@ -17,13 +22,10 @@ namespace SAW.Web.Entities.Requests
             "one lowercase letter, one digit and one special character.")]
         public string Password { get; set; }
 
-        public bool IsConfirmed { get; set; }
-
-        public int Role { get; set; }
-
         [Required]
         [StringLength(20, MinimumLength = 8)]
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; }
+        public bool IsAccountActive { get; set; }
     }
 }

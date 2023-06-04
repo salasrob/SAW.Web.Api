@@ -5,9 +5,10 @@ namespace SAW.Web.Business
 {
     public interface IUsersBusinessService
     {
-        public Task<bool> LogInAsync(string username, string password);
+        public Task<bool> Authenticate(string username, string password);
+        Task<string> TwoFactorLoginAsync(string token);
         public Task LogOutAsync();
-        public Task<int> RegisterUser(UserAddRequest user);
+        public Task<int> CreateUser(UserAddRequest user);
         public Task<User> GetUserById(int userId);
         public Task<List<User>> GetUsers();
     }

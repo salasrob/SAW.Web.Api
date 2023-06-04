@@ -1,4 +1,5 @@
-﻿using SAW.Web.Entities.Security;
+﻿using SAW.Web.Entities;
+using SAW.Web.Entities.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,10 @@ namespace SAW.Web.Business.Security
 {
     public interface ITokenBusinessService
     {
-        Task<bool> CreateToken(int userId, TokenType type);
-        Task<AuthenticationToken> GetToken();
+        Task<bool> Create2FAToken(int userId, TokenType type);
+        Task<AuthenticationToken> GetToken(string token);
+        Task ValidateJsonWebToken(string token);
+
+        Task<string> CreateJsonWebToken(IUserAuthData user);
     }
 }

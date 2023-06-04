@@ -4,5 +4,6 @@
     {
         public string SqlDatabaseConnectionString { get; set; }
         public string AzureCommunicationsConnectionString { get; set; }
+        public JsonWebTokenConfig JsonWebTokenSecret { get; set; }
     }
 }

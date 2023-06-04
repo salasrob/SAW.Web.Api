@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SAW.Web.Business;
 using SAW.Web.Entities.Domain;
 using SAW.Web.Entities.Requests;
+using SAW.Web.Entities.Security;
 
 namespace SAW.Web.Api.Controllers
 {
@@ -19,27 +21,51 @@ namespace SAW.Web.Api.Controllers
             _businessService = businessService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("auth")]
         [AllowAnonymous]
-        public ActionResult<bool> Login(UserLoginRequest request)
+        public ActionResult<bool> Authenticate(UserLoginRequest request)
         {
             try
             {
-                Task<bool> isLoggedIn = _businessService.LogInAsync(request.Email, request.Password);
+                bool twoFactorEmailSent = _businessService.Authenticate(request.Email, request.Password).Result;
 
-                if (isLoggedIn.Result == true)
+                if (twoFactorEmailSent)
                 {
-                    return Ok(isLoggedIn);
+                    return Ok();
                 }
                 else
                 {
-                    return Unauthorized(isLoggedIn);
+                    return Unauthorized();
                 }    
             }
             catch (Exception ex)
             {
                 _logger.LogError($"UserId: {request.Email} Login failed: {ex}");
                 return Problem($"UserId: {request.Email} Login failed: {ex}");
+            }
+        }
+
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public ActionResult<string> TwoFactorLogin(string token)
+        {
+            try
+            {
+                string authToken = _businessService.TwoFactorLoginAsync(token).Result;
+
+                if (!String.IsNullOrEmpty(authToken))
+                {
+                    return Ok(authToken);
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"TwoFactorLogin: {token} TwoFactorLogin failed: {ex}");
+                return Problem($"failed: {ex}");
             }
         }
 
@@ -54,6 +80,20 @@ namespace SAW.Web.Api.Controllers
             {
                 _logger.LogError($"Logout failed: {ex}");
                 return Problem($"Logout failed: {ex}");
+            }
+        }
+
+        [HttpPost()]
+        public ActionResult<int> CreateUser(UserAddRequest user)
+        {
+            try
+            {
+                return Ok(_businessService.CreateUser(user));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"CreateUser failed: {ex}");
+                return Problem($"CreateUser failed: {ex}");
             }
         }
 

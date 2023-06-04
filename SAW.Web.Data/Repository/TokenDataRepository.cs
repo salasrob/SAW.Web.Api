@@ -11,12 +11,12 @@ namespace SAW.Web.Data.Repository
     public class TokenDataRepository : BaseDataRepository , ITokenDataRepository
     {
         private readonly ILogger<TokenDataRepository> _logger;
-        public TokenDataRepository(ILogger<TokenDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings)
+        public TokenDataRepository(ILogger<TokenDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings, logger)
         {
             _logger = logger;
         }
 
-        public async Task<bool> CreateToken(AuthenticationToken userToken)
+        public async Task<bool> Create2FAToken(AuthenticationToken userToken)
         {
             bool isSuccessful = false;
 
@@ -45,7 +45,7 @@ namespace SAW.Web.Data.Repository
             return isSuccessful;
         }
 
-        public async Task<AuthenticationToken> GetToken()
+        public async Task<AuthenticationToken> GetToken(string authHeaderToken)
         {
             AuthenticationToken token = new AuthenticationToken();
 

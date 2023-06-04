@@ -22,18 +22,42 @@ namespace SAW.Web.Business.Service
             _tokenBusinessService = tokenBusinessService;
         }
 
-        public async Task<bool> LogInAsync(string username, string password)
+        public async Task<bool> Authenticate(string username, string password)
         {
-            bool isAuthenticated = false;
-
-            IUserAuthData user = _usersDataRepository.LogInAsync(username, password).Result;
+            IUserAuthData user = _usersDataRepository.Authenticate(username, password).Result;
             if (user != null)
             {
-                //TODO two-factor auth here
-                await _authenticationService.LogInAsync(user);
-                isAuthenticated = _tokenBusinessService.CreateToken(user.Id, TokenType.Login).Result;
+                return await _tokenBusinessService.Create2FAToken(user.Id, TokenType.TwoFactorAuth);
+                //TODO email token
             }
-            return isAuthenticated;
+            return false;
+        }
+
+        public async Task<string> TwoFactorLoginAsync(string token)
+        {
+            AuthenticationToken authToken = null;
+            string jsonWebToken = null;
+            if (!String.IsNullOrEmpty(token))
+            {
+                authToken = await _tokenBusinessService.GetToken(token);
+            }
+
+            if (authToken != null && authToken.Token != Guid.Empty)
+            {
+                User user = await _usersDataRepository.GetUserById(authToken.UserId);
+
+                IUserAuthData userAuth = new UserBase
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Roles = user.Roles,
+                    TenantId = "SawApp-00.1.0"
+                };
+
+                await _authenticationService.LogInAsync(userAuth);
+                jsonWebToken = await _tokenBusinessService.CreateJsonWebToken(userAuth);
+            }
+            return jsonWebToken;
         }
 
         public async Task LogOutAsync()
@@ -41,10 +65,10 @@ namespace SAW.Web.Business.Service
             await _authenticationService.LogOutAsync();
         }
 
-        public async Task<int> RegisterUser(UserAddRequest user)
+        public async Task<int> CreateUser(UserAddRequest user)
         {
-            int userId = await _usersDataRepository.RegisterUser(user);
-            await _tokenBusinessService.CreateToken(userId, TokenType.NewUser);
+            int userId = await _usersDataRepository.CreateUser(user);
+            //await _tokenBusinessService.CreateToken(userId, TokenType.NewUser);
             //TODO email confirmation
             return userId;
         }

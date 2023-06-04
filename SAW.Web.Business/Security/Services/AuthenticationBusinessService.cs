@@ -69,6 +69,11 @@ namespace SAW.Web.Business.Security.Services
             return baseUser;
         }
 
+        public string ExtractAuthorizationHeader()
+        {
+            return _contextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+        }
+
         private static UserBase ExtractUser(ClaimsIdentity identity)
         {
             UserBase baseUser = new UserBase();

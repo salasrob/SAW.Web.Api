@@ -14,27 +14,31 @@ namespace SAW.Web.Data.Repository
         private readonly ILogger<UsersDataRepository> _logger;
         private readonly PasswordHasher _passwordHasher;
 
-        public UsersDataRepository(ILogger<UsersDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings)
+        public UsersDataRepository(ILogger<UsersDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings, logger)
         {
             _logger = logger;
             _passwordHasher = new PasswordHasher();
         }
 
-        public async Task<IUserAuthData> LogInAsync(string username, string password)
+        public async Task<IUserAuthData> Authenticate(string username, string password)
         {
             User userDomainModel = new User();
             try
             {
-                var query = $"";
+                var query = $"[dbo].[Get_User_By_UserName]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    await OpenAsyncConnection(conn);
+                    SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
-                        var dr = await cmd.ExecuteReaderAsync();
-                        if (dr.HasRows)
-                            userDomainModel = dr.MapToSingle<User>();
-                    }
+                        collection.AddWithValue("@UserName", username);
+                    });
+
+                    var dr = await cmd.ExecuteReaderAsync();
+                    if (dr.HasRows)
+                        userDomainModel = dr.MapToSingle<User>();
+
+                    CloseConnection(conn, dr);
                 }
 
 
@@ -62,43 +66,46 @@ namespace SAW.Web.Data.Repository
             return null;
         }
 
-        public async Task<int> RegisterUser(UserAddRequest user)
+        public async Task<int> CreateUser(UserAddRequest user)
         {
             int userId = -1;
             try
             {
                 string hashedPassword = _passwordHasher.HashPassword(user.Password);
 
-                var query = $"";
+                var query = $"[dbo].[Create_User]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
+                    await OpenAsyncConnection(conn);
 
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
-                        SqlParameterCollection collection = cmd.Parameters;
 
-                        collection.AddWithValue("@UserId", user.Email);
+                        collection.AddWithValue("@FirstName", user.FirstName);
+                        collection.AddWithValue("@MiddleName", user.MiddleName);
+                        collection.AddWithValue("@MiddleInitial", user.MiddleInitial);
+                        collection.AddWithValue("@LastName", user.LastName);
+                        collection.AddWithValue("@UserName", user.UserName);
                         collection.AddWithValue("@Password", hashedPassword);
-                        collection.AddWithValue("@IsConfirmed", user.IsConfirmed);
+                        collection.AddWithValue("@IsAccountActive", user.IsAccountActive);
 
                         SqlParameter idOut = new SqlParameter("@Id", System.Data.SqlDbType.Int);
                         idOut.Direction = System.Data.ParameterDirection.Output;
 
                         collection.Add(idOut);
+                    });
 
-                        userId = await cmd.ExecuteNonQueryAsync();
+                    userId = await cmd.ExecuteNonQueryAsync();
 
-                        if (userId < 0)
-                        {
-                            _logger.LogWarning($"UserId: {user.Email} failed to create");
-                        }
+                    if (userId < 0)
+                    {
+                        _logger.LogWarning($"UserId: {user.UserName} failed to create");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"UserId: {user.Email} RegisterUser failed: {ex}");
+                _logger.LogError($"UserId: {user.UserName} RegisterUser failed: {ex}");
                 throw;
             }
             return userId;

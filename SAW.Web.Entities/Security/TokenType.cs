@@ -9,9 +9,9 @@ namespace SAW.Web.Entities.Security
     public enum TokenType
     {
         NotSet = 0,
-        Login,
+        TwoFactorAuth,
         ResetPassword,
         PasswordResent,
-        NewUser,
+        JsonWebToken,
     }
 }

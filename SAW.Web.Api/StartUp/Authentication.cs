@@ -11,12 +11,21 @@ namespace SAW.Web.Api.StartUp
         public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             SetUpCookieAuth(services, configuration);
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = false;
+            });
         }
 
         public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseSession();
         }
 
         private static void SetUpCookieAuth(IServiceCollection services, IConfiguration configuration)
