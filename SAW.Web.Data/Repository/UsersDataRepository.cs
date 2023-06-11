@@ -76,8 +76,7 @@ namespace SAW.Web.Data.Repository
                 var query = $"[dbo].[Create_User]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await OpenAsyncConnection(conn);
-
+                    await conn.OpenAsync();
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
 
@@ -96,7 +95,7 @@ namespace SAW.Web.Data.Repository
                     });
 
                     userId = await cmd.ExecuteNonQueryAsync();
-
+                    await conn.CloseAsync();
                     if (userId < 0)
                     {
                         _logger.LogWarning($"UserId: {user.UserName} failed to create");
@@ -109,6 +108,33 @@ namespace SAW.Web.Data.Repository
                 throw;
             }
             return userId;
+        }
+
+        public async Task<User> GetUserByUserName(string userName)
+        {
+            User user = new User();
+            try
+            {
+                // TODO create query
+                var query = $"";
+                using (var conn = CreateSqlConnection())
+                {
+                    await conn.OpenAsync();
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        var dr = await cmd.ExecuteReaderAsync();
+                        if (dr.HasRows)
+                            user = dr.MapToSingle<User>();
+                    }
+                    await conn.CloseAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"UserName: {userName} GetUserByUserName failed: {ex}");
+                throw;
+            }
+            return user;
         }
 
         public async Task<User> GetUserById(int userId)
@@ -126,6 +152,7 @@ namespace SAW.Web.Data.Repository
                         if (dr.HasRows)
                             user = dr.MapToSingle<User>();
                     }
+                    await conn.CloseAsync();
                 }
             }
             catch (Exception ex)
@@ -150,6 +177,7 @@ namespace SAW.Web.Data.Repository
                         if (dr.HasRows)
                             users = dr.MapToList<User>();
                     }
+                    await conn.CloseAsync();
                 }
             }
             catch (Exception ex)

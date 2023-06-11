@@ -4,6 +4,7 @@ using SAW.Web.Entities.Config;
 using Azure.Communication.Email;
 using System.Data;
 using Microsoft.Extensions.Logging;
+using SAW.Web.Data.Utilities;
 
 namespace SAW.Web.Data.Repository
 {

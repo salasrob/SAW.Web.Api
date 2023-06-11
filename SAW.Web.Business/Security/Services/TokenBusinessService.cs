@@ -22,7 +22,7 @@ namespace SAW.Web.Business.Security.Services
             _jwtConfig = appSettings.Value.JsonWebTokenSecret;
         }
 
-        public async Task<bool> Create2FAToken(int userId, TokenType type)
+        public async Task<Guid> Create2FAToken(int userId, TokenType type)
         {
             AuthenticationToken authToken = new AuthenticationToken();
             authToken.Token = Guid.NewGuid();

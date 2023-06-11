@@ -18,7 +18,6 @@ namespace SAW.Web.Data.Repository
         public async Task<bool> SendEmail(EmailMessage email)
         {
             bool emailSent = false;
-
             try
             {
                 EmailSendOperation emailOperation = await _emailClient.SendAsync(Azure.WaitUntil.Completed, email);

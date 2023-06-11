@@ -14,13 +14,6 @@ namespace SAW.Web.Entities.Security
         private int _expirationDays;
         private JsonWebTokenConfig _config;
 
-        private static readonly string[] _specialTypes = new[]{
-                                                                ClaimTypes.Role,
-                                                                ClaimTypes.Name,
-                                                                ClaimTypes.NameIdentifier,
-                                                                "http://schemas.microsoft.com/accesscontrolservice/2010/07/claims/identityprovider"
-                                                            };
-
         public TokenSecureDataFormat(JsonWebTokenConfig config)
         {
             _secret = config.Secret;
@@ -32,16 +25,15 @@ namespace SAW.Web.Entities.Security
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secret);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Audience = _config.Audience,
-
                 Expires = DateTime.UtcNow.AddDays(_expirationDays),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = GetSigningCredentials(),
+                Issuer = _config.Issuer,
+                Subject = new ClaimsIdentity(data.Principal.Claims)
             };
-            // Subject = data.Principal. ClaimsIdentity
-            tokenDescriptor.Issuer = _config.Issuer;
-            tokenDescriptor.Subject = new ClaimsIdentity(data.Principal.Claims);
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
@@ -54,16 +46,16 @@ namespace SAW.Web.Entities.Security
 
         public AuthenticationTicket Unprotect(string protectedText)
         {
+            TokenValidationParameters tp = new TokenValidationParameters()
+            {
+                ValidIssuer = _config.Issuer,
+                ValidAudience = _config.Audience,
+                ClockSkew = TimeSpan.FromMinutes(0),
+                RequireExpirationTime = true,
+                IssuerSigningKey = GetSymmetricSecurityKey()
+            };
+
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-
-            TokenValidationParameters tp = new TokenValidationParameters();
-
-            tp.ValidIssuer = _config.Issuer;
-            tp.ValidAudience = _config.Audience;
-            tp.ClockSkew = TimeSpan.FromMinutes(0);
-            tp.RequireExpirationTime = true;
-            tp.IssuerSigningKey = GetSymmetricSecurityKey(_secret);
-
             SecurityToken token = null;
             AuthenticationTicket auth = null;
             JwtSecurityToken unvalidatedToken = null;
@@ -81,7 +73,6 @@ namespace SAW.Web.Entities.Security
                 //TODO: Replace this with proper logging
                 // If you are getting an exception here delete your aut cookie and log in again.
                 Console.WriteLine(ex.ToString());
-
                 throw;
             }
             return auth;
@@ -92,17 +83,17 @@ namespace SAW.Web.Entities.Security
             return Unprotect(protectedText);
         }
 
-        private SigningCredentials GetSigningCredentials(string tokenSecret)
+        private SigningCredentials GetSigningCredentials()
         {
-            SymmetricSecurityKey symmetricKey = GetSymmetricSecurityKey(tokenSecret);
-            var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
+            SymmetricSecurityKey symmetricKey = GetSymmetricSecurityKey();
+            var signingCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256Signature);
 
             return signingCredentials;
         }
 
-        private SymmetricSecurityKey GetSymmetricSecurityKey(string jwtSecret)
+        private SymmetricSecurityKey GetSymmetricSecurityKey()
         {
-            return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+            return new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_secret));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿
+using Azure.Communication.Email;
 using SAW.Web.Business.Security;
 using SAW.Web.Data;
 using SAW.Web.Entities;
@@ -13,13 +14,16 @@ namespace SAW.Web.Business.Service
         private readonly IUsersDataRepository _usersDataRepository;
         private readonly IAuthenticationBusinessService<int> _authenticationService;
         private readonly ITokenBusinessService _tokenBusinessService;
+        private readonly IEmailerBusinessService _emailerBusinessService;
         public UsersBusinessService(IUsersDataRepository usersDataRepository
                                     , IAuthenticationBusinessService<int> authenticationService
-                                    , ITokenBusinessService tokenBusinessService)
+                                    , ITokenBusinessService tokenBusinessService
+                                    , IEmailerBusinessService emailerBusinessService)
         {
             _usersDataRepository = usersDataRepository;
             _authenticationService = authenticationService;
             _tokenBusinessService = tokenBusinessService;
+            _emailerBusinessService = emailerBusinessService;
         }
 
         public async Task<bool> Authenticate(string username, string password)
@@ -27,16 +31,21 @@ namespace SAW.Web.Business.Service
             IUserAuthData user = _usersDataRepository.Authenticate(username, password).Result;
             if (user != null)
             {
-                return await _tokenBusinessService.Create2FAToken(user.Id, TokenType.TwoFactorAuth);
-                //TODO email token
+                //Guid token = await _tokenBusinessService.Create2FAToken(user.Id, TokenType.TwoFactorAuth);
+                Guid token = Guid.NewGuid();
+                if (token != Guid.Empty)
+                {
+                    return _emailerBusinessService.SendTwoFactorAuthEmail(user, token).Result;
+                }
             }
             return false;
         }
 
-        public async Task<string> TwoFactorLoginAsync(string token)
+        public async Task<User> TwoFactorLoginAsync(string token)
         {
+            // TODO fix TwoFactorLogin
             AuthenticationToken authToken = null;
-            string jsonWebToken = null;
+            User user = null;
             if (!String.IsNullOrEmpty(token))
             {
                 authToken = await _tokenBusinessService.GetToken(token);
@@ -44,7 +53,7 @@ namespace SAW.Web.Business.Service
 
             if (authToken != null && authToken.Token != Guid.Empty)
             {
-                User user = await _usersDataRepository.GetUserById(authToken.UserId);
+                user = await _usersDataRepository.GetUserById(authToken.UserId);
 
                 IUserAuthData userAuth = new UserBase
                 {
@@ -55,9 +64,8 @@ namespace SAW.Web.Business.Service
                 };
 
                 await _authenticationService.LogInAsync(userAuth);
-                jsonWebToken = await _tokenBusinessService.CreateJsonWebToken(userAuth);
             }
-            return jsonWebToken;
+            return user;
         }
 
         public async Task LogOutAsync()
@@ -71,6 +79,11 @@ namespace SAW.Web.Business.Service
             //await _tokenBusinessService.CreateToken(userId, TokenType.NewUser);
             //TODO email confirmation
             return userId;
+        }
+
+        public async Task<User> GetUserByUserName(string userName)
+        {
+            return await _usersDataRepository.GetUserByUserName(userName);
         }
 
         public async Task<User> GetUserById(int userId)

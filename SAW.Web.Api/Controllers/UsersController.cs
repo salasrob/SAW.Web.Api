@@ -27,6 +27,11 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
+                User user = _businessService.GetUserByUserName(request.Email).Result;
+                if (user == null)
+                {
+                    return NotFound();
+                }
                 bool twoFactorEmailSent = _businessService.Authenticate(request.Email, request.Password).Result;
 
                 if (twoFactorEmailSent)
@@ -47,15 +52,15 @@ namespace SAW.Web.Api.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public ActionResult<string> TwoFactorLogin(string token)
+        public ActionResult<User> TwoFactorLogin(string token)
         {
             try
             {
-                string authToken = _businessService.TwoFactorLoginAsync(token).Result;
+                User user = _businessService.TwoFactorLoginAsync(token).Result;
 
-                if (!String.IsNullOrEmpty(authToken))
+                if (user != null)
                 {
-                    return Ok(authToken);
+                    return Ok(user);
                 }
                 else
                 {
@@ -88,7 +93,7 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
-                return Ok(_businessService.CreateUser(user));
+                return Ok(_businessService.CreateUser(user).Result);
             }
             catch (Exception ex)
             {

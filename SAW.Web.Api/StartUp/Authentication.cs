@@ -59,7 +59,7 @@ namespace SAW.Web.Api.StartUp
                 options.Cookie = cookie;
                 options.SlidingExpiration = true;
                 //TODO learn about JsonWebTokenConfigs
-                //options.TicketDataFormat = new TokenSecureDataFormat(jsonWebTokenConfig);
+                options.TicketDataFormat = new TokenSecureDataFormat(jsonWebTokenConfig);
                 options.AccessDeniedPath = "/unauthorized";
                 options.LoginPath = "/login";
                 options.LogoutPath = "/logout";

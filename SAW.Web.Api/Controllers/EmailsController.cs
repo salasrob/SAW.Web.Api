@@ -23,8 +23,8 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
-                bool emailSent = _emailerService.SendEmail(email).Result;
-                return Ok(emailSent);
+                //bool emailSent = _emailerService.Send(email).Result;
+                return Ok();
             }
             catch (Exception ex)
             {

@@ -16,10 +16,9 @@ namespace SAW.Web.Data.Repository
             _logger = logger;
         }
 
-        public async Task<bool> Create2FAToken(AuthenticationToken userToken)
+        public async Task<Guid> Create2FAToken(AuthenticationToken userToken)
         {
-            bool isSuccessful = false;
-
+            Guid token = Guid.Empty;
             try
             {
                 var query = $"";
@@ -34,15 +33,19 @@ namespace SAW.Web.Data.Repository
                         cmd.Parameters.AddWithValue("@TokenType", userToken.TokenType);
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
-                        isSuccessful = rowsAffected > 0;
+                        if (rowsAffected > 0)
+                        {
+                            token = userToken.Token;
+                        }
                     }
+                    await conn.CloseAsync();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"UserId: {userToken.UserId} CreateToken failed: {ex}");
             }
-            return isSuccessful;
+            return token;
         }
 
         public async Task<AuthenticationToken> GetToken(string authHeaderToken)
@@ -61,6 +64,7 @@ namespace SAW.Web.Data.Repository
                         if (dr.HasRows)
                             token = dr.MapToSingle<AuthenticationToken>();
                     }
+                    await conn.CloseAsync();
                 }
             }
             catch (Exception ex) 

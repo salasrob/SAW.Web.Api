@@ -99,6 +99,7 @@ void ConfigureAppSettings(IServiceCollection services)
     services.Configure<AppSettings>(config.GetSection("AppSettings"));
     services.Configure<SecurityConfig>(config.GetSection("SecurityConfig"));
     services.Configure<JsonWebTokenConfig>(config.GetSection("JsonWebTokenConfig"));
+    services.Configure<AzureEmailSettings>(config.GetSection("AzureEmailSettings"));
 }
 
 void ConfigureDataAccessLayer(IServiceCollection services)

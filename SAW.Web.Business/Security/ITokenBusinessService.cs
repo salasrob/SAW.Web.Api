@@ -10,7 +10,7 @@ namespace SAW.Web.Business.Security
 {
     public interface ITokenBusinessService
     {
-        Task<bool> Create2FAToken(int userId, TokenType type);
+        Task<Guid> Create2FAToken(int userId, TokenType type);
         Task<AuthenticationToken> GetToken(string token);
         Task ValidateJsonWebToken(string token);
 
