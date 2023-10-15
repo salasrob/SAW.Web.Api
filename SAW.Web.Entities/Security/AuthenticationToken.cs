@@ -2,7 +2,7 @@
 {
     public class AuthenticationToken
     {
-        public Guid Token { get; set; }
+        public string UserToken { get; set; }
         public int UserId { get; set; }
         public int TokenType { get; set; }
     }

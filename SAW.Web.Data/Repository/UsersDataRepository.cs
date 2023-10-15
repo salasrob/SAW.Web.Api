@@ -94,12 +94,22 @@ namespace SAW.Web.Data.Repository
                         collection.Add(idOut);
                     });
 
-                    userId = await cmd.ExecuteNonQueryAsync();
-                    await conn.CloseAsync();
-                    if (userId < 0)
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        userId = (int)cmd.Parameters["@Id"].Value;
+
+                        if (userId < 0)
+                        {
+                            _logger.LogWarning($"UserId: {user.UserName} failed to create");
+                        }
+                    }
+                    else
                     {
                         _logger.LogWarning($"UserId: {user.UserName} failed to create");
                     }
+
+                    await conn.CloseAsync();
                 }
             }
             catch (Exception ex)
@@ -115,18 +125,20 @@ namespace SAW.Web.Data.Repository
             User user = new User();
             try
             {
-                // TODO create query
-                var query = $"";
+                var query = $"[dbo].[Get_User_By_UserName]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    await OpenAsyncConnection(conn);
+                    SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
-                        var dr = await cmd.ExecuteReaderAsync();
-                        if (dr.HasRows)
-                            user = dr.MapToSingle<User>();
-                    }
-                    await conn.CloseAsync();
+                        collection.AddWithValue("@UserName", userName);
+                    });
+
+                    var dr = await cmd.ExecuteReaderAsync();
+                    if (dr.HasRows)
+                        user = dr.MapToSingle<User>();
+
+                    CloseConnection(conn, dr);
                 }
             }
             catch (Exception ex)
@@ -142,17 +154,20 @@ namespace SAW.Web.Data.Repository
             User user = new User();
             try
             {
-                var query = $"";
+                var query = $"[dbo].[Get_User_By_Id]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    await OpenAsyncConnection(conn);
+                    SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
-                        var dr = await cmd.ExecuteReaderAsync();
-                        if (dr.HasRows)
-                            user = dr.MapToSingle<User>();
-                    }
-                    await conn.CloseAsync();
+                        collection.AddWithValue("@UserId", userId);
+                    });
+
+                    var dr = await cmd.ExecuteReaderAsync();
+                    if (dr.HasRows)
+                        user = dr.MapToSingle<User>();
+
+                    CloseConnection(conn, dr);
                 }
             }
             catch (Exception ex)
@@ -167,6 +182,7 @@ namespace SAW.Web.Data.Repository
             List<User> users = new List<User>();
             try
             {
+                //TODO create stored procedure
                 var query = $"";
                 using (var conn = CreateSqlConnection())
                 {

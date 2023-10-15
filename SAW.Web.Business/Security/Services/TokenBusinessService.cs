@@ -22,10 +22,10 @@ namespace SAW.Web.Business.Security.Services
             _jwtConfig = appSettings.Value.JsonWebTokenSecret;
         }
 
-        public async Task<Guid> Create2FAToken(int userId, TokenType type)
+        public async Task<string> Create2FAToken(int userId, TokenType type)
         {
             AuthenticationToken authToken = new AuthenticationToken();
-            authToken.Token = Guid.NewGuid();
+            authToken.UserToken = Guid.NewGuid().ToString();
             authToken.UserId = userId;
             authToken.TokenType = (int)type;
 
@@ -37,9 +37,8 @@ namespace SAW.Web.Business.Security.Services
             return await _tokenDataRepository.GetToken(token);
         }
 
-        public async Task<string> CreateJsonWebToken(IUserAuthData user)
+        public string CreateJsonWebToken(IUserAuthData user)
         {
-
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
 

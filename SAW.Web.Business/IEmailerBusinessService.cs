@@ -6,6 +6,6 @@ namespace SAW.Web.Business
 {
     public interface IEmailerBusinessService
     {
-        public Task<bool> SendTwoFactorAuthEmail(IUserAuthData user, Guid token);
+        public Task<bool> SendTwoFactorAuthEmail(IUserAuthData user, string token);
     }
 }

@@ -19,7 +19,7 @@ namespace SAW.Web.Business.Services
             _azureEmailSettings = azureEmailSettings;
             _env = env;
         }
-        public Task<bool> SendTwoFactorAuthEmail(IUserAuthData user, Guid token)
+        public Task<bool> SendTwoFactorAuthEmail(IUserAuthData user, string token)
         {
             EmailContent content = new EmailContent("test");
             content.PlainText = "this is a test";
@@ -28,13 +28,13 @@ namespace SAW.Web.Business.Services
             return _emailDataRepository.SendEmail(email);
         }
 
-        private EmailContent CreateEmailConfirmationContent(IUserAuthData user, Guid token)
+        private EmailContent CreateEmailConfirmationContent(IUserAuthData user, string token)
         {
             string filePath = _env.WebRootPath + "/EmailTemplates/EmailConfirmation.html";
 
             string htmlContent = System.IO.File.ReadAllText(filePath);
             //htmlContent = htmlContent.Replace("{{$SAWDomain}}", _appKeys.WelrusDomain);
-            htmlContent = htmlContent.Replace("{{$token}}", token.ToString());
+            htmlContent = htmlContent.Replace("{{$token}}", token);
 
             string subject = "Save A Warrior App - Please confirm your account";
             EmailContent content = new EmailContent(subject);

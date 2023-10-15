@@ -35,7 +35,7 @@ namespace SAW.Web.Business.Service
                 Guid token = Guid.NewGuid();
                 if (token != Guid.Empty)
                 {
-                    return _emailerBusinessService.SendTwoFactorAuthEmail(user, token).Result;
+                    return _emailerBusinessService.SendTwoFactorAuthEmail(user, token.ToString()).Result;
                 }
             }
             return false;
@@ -43,15 +43,14 @@ namespace SAW.Web.Business.Service
 
         public async Task<User> TwoFactorLoginAsync(string token)
         {
-            // TODO fix TwoFactorLogin
             AuthenticationToken authToken = null;
-            User user = null;
+            User? user = null;
             if (!String.IsNullOrEmpty(token))
             {
                 authToken = await _tokenBusinessService.GetToken(token);
             }
 
-            if (authToken != null && authToken.Token != Guid.Empty)
+            if (!String.IsNullOrEmpty(token) && authToken != null)
             {
                 user = await _usersDataRepository.GetUserById(authToken.UserId);
 
@@ -76,8 +75,6 @@ namespace SAW.Web.Business.Service
         public async Task<int> CreateUser(UserAddRequest user)
         {
             int userId = await _usersDataRepository.CreateUser(user);
-            //await _tokenBusinessService.CreateToken(userId, TokenType.NewUser);
-            //TODO email confirmation
             return userId;
         }
 

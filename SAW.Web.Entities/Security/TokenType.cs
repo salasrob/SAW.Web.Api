@@ -10,8 +10,8 @@ namespace SAW.Web.Entities.Security
     {
         NotSet = 0,
         TwoFactorAuth,
-        ResetPassword,
-        PasswordResent,
+        NewUserConfirmation,
+        PasswordReset,
         JsonWebToken,
     }
 }
