@@ -1,7 +1,7 @@
 ﻿
-using Azure.Communication.Email;
 using SAW.Web.Business.Security;
 using SAW.Web.Data;
+using SAW.Web.Data.Utilities;
 using SAW.Web.Entities;
 using SAW.Web.Entities.Domain;
 using SAW.Web.Entities.Requests;
@@ -15,6 +15,7 @@ namespace SAW.Web.Business.Service
         private readonly IAuthenticationBusinessService<int> _authenticationService;
         private readonly ITokenBusinessService _tokenBusinessService;
         private readonly IEmailerBusinessService _emailerBusinessService;
+        private readonly AuthenticationUtil _authenticationUtil;
         public UsersBusinessService(IUsersDataRepository usersDataRepository
                                     , IAuthenticationBusinessService<int> authenticationService
                                     , ITokenBusinessService tokenBusinessService
@@ -24,6 +25,7 @@ namespace SAW.Web.Business.Service
             _authenticationService = authenticationService;
             _tokenBusinessService = tokenBusinessService;
             _emailerBusinessService = emailerBusinessService;
+            _authenticationUtil = new AuthenticationUtil();
         }
 
         public async Task<bool> Authenticate(string username, string password)
@@ -31,11 +33,12 @@ namespace SAW.Web.Business.Service
             IUserAuthData user = _usersDataRepository.Authenticate(username, password).Result;
             if (user != null)
             {
-                //Guid token = await _tokenBusinessService.Create2FAToken(user.Id, TokenType.TwoFactorAuth);
-                Guid token = Guid.NewGuid();
-                if (token != Guid.Empty)
+                string otp = _authenticationUtil.GenerateOneTimePasscode();
+                //TODO: store token in DB
+
+                if (!String.IsNullOrEmpty(otp))
                 {
-                    return _emailerBusinessService.SendTwoFactorAuthEmail(user, token.ToString()).Result;
+                    return _emailerBusinessService.SendEmailWithToken(username, otp, TokenType.TwoFactorAuth).Result;
                 }
             }
             return false;
@@ -47,6 +50,7 @@ namespace SAW.Web.Business.Service
             User? user = null;
             if (!String.IsNullOrEmpty(token))
             {
+                //TODO: Get token created in last 30 minutes
                 authToken = await _tokenBusinessService.GetToken(token);
             }
 
@@ -72,9 +76,18 @@ namespace SAW.Web.Business.Service
             await _authenticationService.LogOutAsync();
         }
 
-        public async Task<int> CreateUser(UserAddRequest user)
+        public async Task<int> CreateUser(UserAddRequest userAddRequest)
         {
-            int userId = await _usersDataRepository.CreateUser(user);
+            int userId = await _usersDataRepository.CreateUser(userAddRequest);
+
+            if (userId > 0)
+            {
+                Guid token = Guid.NewGuid();
+                if (token != Guid.Empty)
+                {
+                    await _emailerBusinessService.SendEmailWithToken(userAddRequest.UserName, token.ToString(), TokenType.NewUserConfirmation);
+                }
+            }
             return userId;
         }
 

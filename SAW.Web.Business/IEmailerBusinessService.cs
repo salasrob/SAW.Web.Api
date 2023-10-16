@@ -1,11 +1,8 @@
-﻿using Azure.Communication.Email;
-using SAW.Web.Entities;
-using SAW.Web.Entities.Requests;
-using System;
+﻿using SAW.Web.Entities.Security;
 namespace SAW.Web.Business
 {
     public interface IEmailerBusinessService
     {
-        public Task<bool> SendTwoFactorAuthEmail(IUserAuthData user, string token);
+        public Task<bool> SendEmailWithToken(string emailAddress, string token, TokenType tokenType);
     }
 }

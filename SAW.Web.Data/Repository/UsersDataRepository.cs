@@ -12,12 +12,12 @@ namespace SAW.Web.Data.Repository
     public class UsersDataRepository : BaseDataRepository, IUsersDataRepository
     {
         private readonly ILogger<UsersDataRepository> _logger;
-        private readonly PasswordHasher _passwordHasher;
+        private readonly AuthenticationUtil _authenticationUtil;
 
         public UsersDataRepository(ILogger<UsersDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings, logger)
         {
             _logger = logger;
-            _passwordHasher = new PasswordHasher();
+            _authenticationUtil = new AuthenticationUtil();
         }
 
         public async Task<IUserAuthData> Authenticate(string username, string password)
@@ -25,10 +25,11 @@ namespace SAW.Web.Data.Repository
             User userDomainModel = new User();
             try
             {
-                var query = $"[dbo].[Get_User_By_UserName]";
                 using (var conn = CreateSqlConnection())
                 {
                     await OpenAsyncConnection(conn);
+
+                    string query = $"[dbo].[Get_User_By_UserName]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
                         collection.AddWithValue("@UserName", username);
@@ -42,7 +43,7 @@ namespace SAW.Web.Data.Repository
                 }
 
 
-                if (_passwordHasher.VerifyPassword(password, userDomainModel.Password))
+                if (_authenticationUtil.VerifyPassword(password, userDomainModel.Password))
                 {
                     IUserAuthData user = new UserBase
                     {
@@ -71,15 +72,15 @@ namespace SAW.Web.Data.Repository
             int userId = -1;
             try
             {
-                string hashedPassword = _passwordHasher.HashPassword(user.Password);
+                string hashedPassword = _authenticationUtil.HashPassword(user.Password);
 
-                var query = $"[dbo].[Create_User]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
+                    await OpenAsyncConnection(conn);
+
+                    string query = $"[dbo].[Create_User]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
-
                         collection.AddWithValue("@FirstName", user.FirstName);
                         collection.AddWithValue("@MiddleName", user.MiddleName);
                         collection.AddWithValue("@MiddleInitial", user.MiddleInitial);
@@ -109,7 +110,7 @@ namespace SAW.Web.Data.Repository
                         _logger.LogWarning($"UserId: {user.UserName} failed to create");
                     }
 
-                    await conn.CloseAsync();
+                    CloseConnection(conn, null);
                 }
             }
             catch (Exception ex)
@@ -125,10 +126,11 @@ namespace SAW.Web.Data.Repository
             User user = new User();
             try
             {
-                var query = $"[dbo].[Get_User_By_UserName]";
                 using (var conn = CreateSqlConnection())
                 {
                     await OpenAsyncConnection(conn);
+
+                    string query = $"[dbo].[Get_User_By_UserName]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
                         collection.AddWithValue("@UserName", userName);
@@ -154,10 +156,11 @@ namespace SAW.Web.Data.Repository
             User user = new User();
             try
             {
-                var query = $"[dbo].[Get_User_By_Id]";
                 using (var conn = CreateSqlConnection())
                 {
                     await OpenAsyncConnection(conn);
+
+                    string query = $"[dbo].[Get_User_By_Id]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
                         collection.AddWithValue("@UserId", userId);
@@ -182,18 +185,19 @@ namespace SAW.Web.Data.Repository
             List<User> users = new List<User>();
             try
             {
-                //TODO create stored procedure
-                var query = $"";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
+                    await OpenAsyncConnection(conn);
+
+                    //TODO create stored procedure
+                    string query = $"";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
                         var dr = await cmd.ExecuteReaderAsync();
                         if (dr.HasRows)
                             users = dr.MapToList<User>();
                     }
-                    await conn.CloseAsync();
+                    CloseConnection(conn, null);
                 }
             }
             catch (Exception ex)

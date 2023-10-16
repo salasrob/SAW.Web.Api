@@ -7,7 +7,6 @@ using SAW.Web.Entities.Security;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SAW.Web.Business.Security.Services
 {
@@ -22,14 +21,14 @@ namespace SAW.Web.Business.Security.Services
             _jwtConfig = appSettings.Value.JsonWebTokenSecret;
         }
 
-        public async Task<string> Create2FAToken(int userId, TokenType type)
+        public async Task<string> CreateToken(int userId, TokenType type)
         {
             AuthenticationToken authToken = new AuthenticationToken();
             authToken.UserToken = Guid.NewGuid().ToString();
             authToken.UserId = userId;
             authToken.TokenType = (int)type;
 
-            return await _tokenDataRepository.Create2FAToken(authToken);
+            return await _tokenDataRepository.CreateToken(authToken);
         }
 
         public async Task<AuthenticationToken> GetToken(string token)

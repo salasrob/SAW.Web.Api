@@ -2,7 +2,7 @@
 
 namespace SAW.Web.Data.Utilities
 {
-    public class PasswordHasher
+    public class AuthenticationUtil
     {
         public bool VerifyPassword(string claimedPassword, string passwordFromDatabase)
         {
@@ -12,6 +12,12 @@ namespace SAW.Web.Data.Utilities
         public string HashPassword(string password)
         {
             return BCryptNet.HashPassword(password);
+        }
+
+        public string GenerateOneTimePasscode()
+        {
+            Random generator = new Random();
+            return generator.Next(100000, 1000000).ToString("D8");
         }
     }
 }

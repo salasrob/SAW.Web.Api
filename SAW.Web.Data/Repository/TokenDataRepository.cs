@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SAW.Web.Data.Utilities;
 using SAW.Web.Entities.Config;
-using SAW.Web.Entities.Domain;
 using SAW.Web.Entities.Security;
 using System.Data.SqlClient;
 
@@ -17,16 +16,16 @@ namespace SAW.Web.Data.Repository
             _logger = logger;
         }
 
-        public async Task<string> Create2FAToken(AuthenticationToken userToken)
+        public async Task<string> CreateToken(AuthenticationToken userToken)
         {
             string? token = null;
             try
             {
-                var query = $"[dbo].[Create_UserToken]";
                 using (var conn = CreateSqlConnection())
                 {
-                    await conn.OpenAsync();
+                    await OpenAsyncConnection(conn);
 
+                    string query = $"[dbo].[Create_UserToken]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
                         collection.AddWithValue("@UserId", userToken.UserId);
@@ -44,7 +43,7 @@ namespace SAW.Web.Data.Repository
                     {
                         token = (string)cmd.Parameters["@UserToken"].Value;
                     }
-                    await conn.CloseAsync();
+                    CloseConnection(conn, null);
                 }
             }
             catch (Exception ex)
@@ -60,10 +59,11 @@ namespace SAW.Web.Data.Repository
 
             try
             {
-                var query = $"[dbo].[Get_Token_By_Token]";
                 using (var conn = CreateSqlConnection())
                 {
                     await OpenAsyncConnection(conn);
+
+                    string query = $"[dbo].[Get_Token_By_Token]";
                     SqlCommand cmd = GetCommand(conn, query, paramMapper: delegate (SqlParameterCollection collection)
                     {
                         collection.AddWithValue("@UserToken", authHeaderToken);

@@ -12,13 +12,13 @@ namespace SAW.Web.Api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IUsersBusinessService _businessService;
+        private readonly IUsersBusinessService _usersBusinessService;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(ILogger<UsersController> logger, IUsersBusinessService businessService)
+        public UsersController(ILogger<UsersController> logger, IUsersBusinessService usersBusinessService)
         {
             _logger = logger;
-            _businessService = businessService;
+            _usersBusinessService = usersBusinessService;
         }
 
         [HttpPost("auth")]
@@ -27,13 +27,13 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
-                User user = _businessService.GetUserByUserName(request.Email).Result;
+                User user = _usersBusinessService.GetUserByUserName(request.Email).Result;
                 if (user == null)
                 {
                     return NotFound();
                 }
-                bool twoFactorEmailSent = _businessService.Authenticate(request.Email, request.Password).Result;
 
+                bool twoFactorEmailSent = _usersBusinessService.Authenticate(request.Email, request.Password).Result;
                 if (twoFactorEmailSent)
                 {
                     return Ok();
@@ -56,7 +56,7 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
-                User user = _businessService.TwoFactorLoginAsync(token).Result;
+                User user = _usersBusinessService.TwoFactorLoginAsync(token).Result;
 
                 if (user != null)
                 {
@@ -79,7 +79,7 @@ namespace SAW.Web.Api.Controllers
         {
             try
             {
-                return Ok(_businessService.LogOutAsync());
+                return Ok(_usersBusinessService.LogOutAsync());
             }
             catch (Exception ex)
             {
@@ -89,11 +89,21 @@ namespace SAW.Web.Api.Controllers
         }
 
         [HttpPost()]
-        public ActionResult<int> CreateUser(UserAddRequest user)
+        public ActionResult<int> CreateUser(UserAddRequest userAddRequest)
         {
             try
             {
-                return Ok(_businessService.CreateUser(user).Result);
+                User user = _usersBusinessService.GetUserByUserName(userAddRequest.UserName).Result;
+
+                if (user != null)
+                {
+                    _logger.LogWarning($"CreateUser failed: UserName already exists");
+                    return BadRequest($"CreateUser failed: UserName already exists");
+                }
+                else
+                {
+                    return Ok(_usersBusinessService.CreateUser(userAddRequest).Result);
+                }
             }
             catch (Exception ex)
             {
@@ -108,12 +118,15 @@ namespace SAW.Web.Api.Controllers
             User user = new User();
             try
             {
-                user = _businessService.GetUserById(userId).Result;
-                if (user == null)
+                user = _usersBusinessService.GetUserById(userId).Result;
+                if (user != null)
                 {
-                   return NotFound(userId);
+                    return Ok(user);
                 }
-                return Ok(user);
+                else
+                {
+                    return NotFound(userId);
+                }
             }
             catch (Exception ex)
             {
@@ -128,7 +141,7 @@ namespace SAW.Web.Api.Controllers
             List<User> users = new List<User>();
             try
             {
-                users = _businessService.GetUsers().Result;
+                users = _usersBusinessService.GetUsers().Result;
                 return Ok(users);
             }
             catch (Exception ex)
