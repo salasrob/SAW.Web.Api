@@ -15,7 +15,7 @@ namespace SAW.Web.Api.StartUp
                            .SetIsOriginAllowedToAllowWildcardSubdomains()
                            .SetIsOriginAllowed(delegate (string requestingOrigin)
                            {
-                              return true;
+                               return true;
                            }).Build();
                 });
             });

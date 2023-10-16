@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using System.Net;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using SAW.Web.Entities.Config;
 using SAW.Web.Entities.Security;
+using System.Net;
 
 namespace SAW.Web.Api.StartUp
 {

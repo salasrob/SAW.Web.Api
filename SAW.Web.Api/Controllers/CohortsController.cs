@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SAW.Web.Business;
 
 namespace SAW.Web.Api.Controllers
 {

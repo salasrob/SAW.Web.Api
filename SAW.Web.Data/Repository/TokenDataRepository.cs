@@ -8,7 +8,7 @@ using System.Data.SqlClient;
 
 namespace SAW.Web.Data.Repository
 {
-    public class TokenDataRepository : BaseDataRepository , ITokenDataRepository
+    public class TokenDataRepository : BaseDataRepository, ITokenDataRepository
     {
         private readonly ILogger<TokenDataRepository> _logger;
         public TokenDataRepository(ILogger<TokenDataRepository> logger, IOptions<AppSettings> appSettings) : base(appSettings, logger)
@@ -76,7 +76,7 @@ namespace SAW.Web.Data.Repository
                     CloseConnection(conn, dr);
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError($"GetToken failed: {ex}");
             }

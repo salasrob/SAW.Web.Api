@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Options;
-using System.Data.SqlClient;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SAW.Web.Entities.Config;
 using System.Data;
-using Microsoft.Extensions.Logging;
+using System.Data.SqlClient;
 
 namespace SAW.Web.Data.Repository
 {

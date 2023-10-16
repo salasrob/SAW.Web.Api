@@ -1,7 +1,6 @@
 ﻿using Azure.Communication.Email;
 using Microsoft.AspNetCore.Mvc;
 using SAW.Web.Business;
-using SAW.Web.Entities.Requests;
 
 namespace SAW.Web.Api.Controllers
 {

@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SAW.Web.Business;
 using SAW.Web.Entities.Domain;
 using SAW.Web.Entities.Requests;
-using SAW.Web.Entities.Security;
 
 namespace SAW.Web.Api.Controllers
 {
@@ -41,7 +39,7 @@ namespace SAW.Web.Api.Controllers
                 else
                 {
                     return Unauthorized();
-                }    
+                }
             }
             catch (Exception ex)
             {
