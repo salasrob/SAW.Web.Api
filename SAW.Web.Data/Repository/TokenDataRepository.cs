@@ -16,9 +16,8 @@ namespace SAW.Web.Data.Repository
             _logger = logger;
         }
 
-        public async Task<string> CreateToken(AuthenticationToken userToken)
+        public async Task<DomainSecurityToken> CreateToken(DomainSecurityToken userToken)
         {
-            string? token = null;
             try
             {
                 using (var conn = CreateSqlConnection())
@@ -31,17 +30,12 @@ namespace SAW.Web.Data.Repository
                         collection.AddWithValue("@UserId", userToken.UserId);
                         collection.AddWithValue("@UserToken", userToken.UserToken);
                         collection.AddWithValue("@TokenType", userToken.TokenType);
-
-                        SqlParameter tokenOut = new SqlParameter("@UserToken", System.Data.SqlDbType.NVarChar);
-                        tokenOut.Direction = System.Data.ParameterDirection.Output;
-
-                        collection.Add(tokenOut);
                     });
 
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                    if (rowsAffected < 1)
                     {
-                        token = (string)cmd.Parameters["@UserToken"].Value;
+                        return null;
                     }
                     CloseConnection(conn, null);
                 }
@@ -50,12 +44,12 @@ namespace SAW.Web.Data.Repository
             {
                 _logger.LogError($"UserId: {userToken.UserId} CreateToken failed: {ex}");
             }
-            return token;
+            return userToken;
         }
 
-        public async Task<AuthenticationToken> GetToken(string authHeaderToken)
+        public async Task<DomainSecurityToken> GetToken(string authHeaderToken)
         {
-            AuthenticationToken token = new AuthenticationToken();
+            DomainSecurityToken token = new DomainSecurityToken();
 
             try
             {
@@ -71,7 +65,7 @@ namespace SAW.Web.Data.Repository
 
                     var dr = await cmd.ExecuteReaderAsync();
                     if (dr.HasRows)
-                        token = dr.MapToSingle<AuthenticationToken>();
+                        token = dr.MapToSingle<DomainSecurityToken>();
 
                     CloseConnection(conn, dr);
                 }

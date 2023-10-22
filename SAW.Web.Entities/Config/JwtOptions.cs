@@ -1,10 +1,10 @@
 ﻿namespace SAW.Web.Entities.Config
 {
-    public class JsonWebTokenConfig
+    public class JwtOptions
     {
-        public int ExpirationDays { get; set; }
         public string Secret { get; set; }
-        public string Audience { get; set; }
+        public int ExpirationHours { get; set; }
         public string Issuer { get; set; }
+        public string Audience { get; set; }
     }
 }

@@ -123,7 +123,7 @@ namespace SAW.Web.Data.Repository
 
         public async Task<User> GetUserByUserName(string userName)
         {
-            User user = new User();
+            User user = null;
             try
             {
                 using (var conn = CreateSqlConnection())
@@ -153,7 +153,7 @@ namespace SAW.Web.Data.Repository
 
         public async Task<User> GetUserById(int userId)
         {
-            User user = new User();
+            User user = null;
             try
             {
                 using (var conn = CreateSqlConnection())

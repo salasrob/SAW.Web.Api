@@ -5,9 +5,8 @@ namespace SAW.Web.Business.Security
 {
     public interface ITokenBusinessService
     {
-        Task<string> CreateToken(int userId, TokenType type);
-        Task<AuthenticationToken> GetToken(string token);
-        Task ValidateJsonWebToken(string token);
-        string CreateJsonWebToken(IUserAuthData user);
+        Task<DomainSecurityToken> CreateToken(IUserAuthData user, TokenType tokenType);
+        Task<DomainSecurityToken> GetToken(string token);
+        void InvalidateJsonWebToken(string token);
     }
 }

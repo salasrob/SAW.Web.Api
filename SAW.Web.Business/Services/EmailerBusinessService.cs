@@ -3,33 +3,33 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using SAW.Web.Data;
 using SAW.Web.Entities.Config;
-using SAW.Web.Entities.Security;
+using SAW.Web.Entities.Email;
 
 namespace SAW.Web.Business.Services
 {
     public class EmailerBusinessService : IEmailerBusinessService
     {
         private readonly IEmailDataRepository _emailDataRepository;
-        private IHostingEnvironment _env;
+        private IWebHostEnvironment _env;
         private readonly IOptions<AzureEmailSettings> _azureEmailSettings;
-        public EmailerBusinessService(IEmailDataRepository emailDataRepository, IOptions<AzureEmailSettings> azureEmailSettings, IHostingEnvironment env)
+        public EmailerBusinessService(IEmailDataRepository emailDataRepository, IOptions<AzureEmailSettings> azureEmailSettings, IWebHostEnvironment env)
         {
             _emailDataRepository = emailDataRepository;
             _azureEmailSettings = azureEmailSettings;
             _env = env;
         }
-        public Task<bool> SendEmailWithToken(string emailAddress, string token, TokenType tokenType)
+        public Task<bool> SendEmailWithToken(string emailAddress, string token, EmailType tokenType)
         {
             Task<bool> isSentTask = null;
             EmailMessage email;
 
             switch (tokenType)
             {
-                case TokenType.NewUserConfirmation:
+                case EmailType.NewUserConfirmation:
                     email = new EmailMessage(_azureEmailSettings.Value.MailFrom, emailAddress, CreateEmailConfirmationContent(emailAddress, token));
                     isSentTask = _emailDataRepository.SendEmail(email);
                     break;
-                case TokenType.TwoFactorAuth:
+                case EmailType.TwoFactorAuthentication:
                     email = new EmailMessage(_azureEmailSettings.Value.MailFrom, emailAddress, CreateOneTimePasscode(emailAddress, token));
                     isSentTask = _emailDataRepository.SendEmail(email);
                     break;

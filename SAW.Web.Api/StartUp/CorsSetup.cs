@@ -1,7 +1,7 @@
 ﻿
 namespace SAW.Web.Api.StartUp
 {
-    public class Cors
+    public class CorsSetup
     {
         public static void ConfigureServices(IServiceCollection services)
         {

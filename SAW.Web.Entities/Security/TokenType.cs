@@ -3,9 +3,7 @@
     public enum TokenType
     {
         NotSet = 0,
-        TwoFactorAuth,
-        NewUserConfirmation,
-        PasswordReset,
-        JsonWebToken,
+        OneTimePasscode,
+        JsonWebToken
     }
 }

@@ -1,4 +1,3 @@
-
 using Microsoft.OpenApi.Models;
 using SAW.Web.Api.StartUp;
 using SAW.Web.Business;
@@ -33,8 +32,8 @@ ConfigureDataAccessLayer(services);
 //Add business logic service layer
 ConfigureBusinessServicesLayer(services);
 
-Authentication.ConfigureServices(services, config);
-Cors.ConfigureServices(services);
+AuthenticationSetup.ConfigureServices(services, config);
+CorsSetup.ConfigureServices(services);
 
 services.AddSwaggerGen(c =>
 {
@@ -62,10 +61,10 @@ if (!env.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-Authentication.Configure(app, env);
+AuthenticationSetup.Configure(app, env);
 
 
-Cors.Configure(app, env);
+CorsSetup.Configure(app, env);
 app.MapControllers();
 
 app.Run();
@@ -98,7 +97,7 @@ void ConfigureAppSettings(IServiceCollection services)
 {
     services.Configure<AppSettings>(config.GetSection("AppSettings"));
     services.Configure<SecurityConfig>(config.GetSection("SecurityConfig"));
-    services.Configure<JsonWebTokenConfig>(config.GetSection("JsonWebTokenConfig"));
+    services.Configure<JwtOptions>(config.GetSection("JsonWebTokenConfig"));
     services.Configure<AzureEmailSettings>(config.GetSection("AzureEmailSettings"));
 }
 
@@ -116,5 +115,6 @@ void ConfigureBusinessServicesLayer(IServiceCollection services)
     services.AddSingleton<ITokenBusinessService, TokenBusinessService>();
     services.AddSingleton<IUsersBusinessService, UsersBusinessService>();
     services.AddSingleton<IEmailerBusinessService, EmailerBusinessService>();
+    services.AddSingleton<ITokenProvider, TokenProvider>();
 }
 

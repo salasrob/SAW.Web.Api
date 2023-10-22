@@ -13,11 +13,5 @@ namespace SAW.Web.Data.Utilities
         {
             return BCryptNet.HashPassword(password);
         }
-
-        public string GenerateOneTimePasscode()
-        {
-            Random generator = new Random();
-            return generator.Next(100000, 1000000).ToString("D8");
-        }
     }
 }

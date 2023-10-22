@@ -1,83 +1,46 @@
-﻿using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using SAW.Web.Data;
+﻿using SAW.Web.Data;
 using SAW.Web.Entities;
-using SAW.Web.Entities.Config;
 using SAW.Web.Entities.Security;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace SAW.Web.Business.Security.Services
 {
     public class TokenBusinessService : ITokenBusinessService
     {
         private readonly ITokenDataRepository _tokenDataRepository;
-        private readonly JsonWebTokenConfig _jwtConfig;
+        private readonly ITokenProvider _tokenProvider;
 
-        public TokenBusinessService(ITokenDataRepository tokenDataRespository, IOptions<AppSettings> appSettings)
+        public TokenBusinessService(ITokenDataRepository tokenDataRespository, ITokenProvider tokenProvider)
         {
             _tokenDataRepository = tokenDataRespository;
-            _jwtConfig = appSettings.Value.JsonWebTokenSecret;
+            _tokenProvider = tokenProvider;
         }
 
-        public async Task<string> CreateToken(int userId, TokenType type)
+        public async Task<DomainSecurityToken> CreateToken(IUserAuthData user, TokenType tokenType)
         {
-            AuthenticationToken authToken = new AuthenticationToken();
-            authToken.UserToken = Guid.NewGuid().ToString();
-            authToken.UserId = userId;
-            authToken.TokenType = (int)type;
+            DomainSecurityToken? securityToken = null;
 
-            return await _tokenDataRepository.CreateToken(authToken);
+            switch (tokenType)
+            {
+                case TokenType.OneTimePasscode:
+                    securityToken = _tokenProvider.Generate(user, TokenType.OneTimePasscode);
+                    break;
+                case TokenType.JsonWebToken:
+                    securityToken = _tokenProvider.Generate(user);
+                    break;
+                default:
+                    break;
+            }
+            return await _tokenDataRepository.CreateToken(securityToken);
         }
 
-        public async Task<AuthenticationToken> GetToken(string token)
+        public async Task<DomainSecurityToken> GetToken(string token)
         {
             return await _tokenDataRepository.GetToken(token);
         }
 
-        public string CreateJsonWebToken(IUserAuthData user)
+        public void InvalidateJsonWebToken(string token)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Audience = _jwtConfig.Audience,
-                Expires = DateTime.UtcNow.AddDays(_jwtConfig.ExpirationDays),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _jwtConfig.Issuer,
-                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) })
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
-        public async Task ValidateJsonWebToken(string token)
-        {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
-                    ClockSkew = TimeSpan.Zero
-                }, out SecurityToken validatedToken);
-
-                var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
-            }
-            catch (Exception ex)
-            {
-                // do nothing if validation fails
-            }
-
+            //Delete token from DB?
         }
     }
 }

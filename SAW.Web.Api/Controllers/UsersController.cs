@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SAW.Web.Business;
 using SAW.Web.Entities.Domain;
 using SAW.Web.Entities.Requests;
+using SAW.Web.Entities.Security;
 
 namespace SAW.Web.Api.Controllers
 {
@@ -19,9 +20,9 @@ namespace SAW.Web.Api.Controllers
             _usersBusinessService = usersBusinessService;
         }
 
-        [HttpPost("auth")]
+        [HttpPost("token")]
         [AllowAnonymous]
-        public ActionResult<bool> Authenticate(UserLoginRequest request)
+        public ActionResult<string> JwtAuthenticate(UserLoginRequest request)
         {
             try
             {
@@ -31,7 +32,36 @@ namespace SAW.Web.Api.Controllers
                     return NotFound();
                 }
 
-                bool twoFactorEmailSent = _usersBusinessService.Authenticate(request.Email, request.Password).Result;
+                DomainSecurityToken domainToken = _usersBusinessService.JwtBearerAuthenticate(request.Email, request.Password);
+                if (!String.IsNullOrEmpty(domainToken.UserToken))
+                {
+                    return Ok(domainToken.UserToken);
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"UserId: {request.Email} Login failed: {ex}");
+                return Problem($"UserId: {request.Email} Login failed: {ex}");
+            }
+        }
+
+        [HttpPost("2fa")]
+        [AllowAnonymous]
+        public ActionResult<bool> TwoFactorAuthenticate(UserLoginRequest request)
+        {
+            try
+            {
+                User user = _usersBusinessService.GetUserByUserName(request.Email).Result;
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                bool twoFactorEmailSent = _usersBusinessService.TwoFactorAuthenticate(request.Email, request.Password);
                 if (twoFactorEmailSent)
                 {
                     return Ok();
@@ -93,7 +123,7 @@ namespace SAW.Web.Api.Controllers
             {
                 User user = _usersBusinessService.GetUserByUserName(userAddRequest.UserName).Result;
 
-                if (user != null)
+                if (user is not null)
                 {
                     _logger.LogWarning($"CreateUser failed: UserName already exists");
                     return BadRequest($"CreateUser failed: UserName already exists");

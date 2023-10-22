@@ -4,6 +4,7 @@ using SAW.Web.Data;
 using SAW.Web.Data.Utilities;
 using SAW.Web.Entities;
 using SAW.Web.Entities.Domain;
+using SAW.Web.Entities.Email;
 using SAW.Web.Entities.Requests;
 using SAW.Web.Entities.Security;
 
@@ -25,20 +26,30 @@ namespace SAW.Web.Business.Service
             _authenticationService = authenticationService;
             _tokenBusinessService = tokenBusinessService;
             _emailerBusinessService = emailerBusinessService;
-            _authenticationUtil = new AuthenticationUtil();
         }
 
-        public async Task<bool> Authenticate(string username, string password)
+        public DomainSecurityToken JwtBearerAuthenticate(string username, string password)
+        {
+            IUserAuthData user = _usersDataRepository.Authenticate(username, password).Result;
+            DomainSecurityToken? JsonWebToken = null;
+
+            if (user is not null)
+            {
+                JsonWebToken = _tokenBusinessService.CreateToken(user, TokenType.JsonWebToken).Result;
+            }
+            return JsonWebToken;
+        }
+
+        public bool TwoFactorAuthenticate(string username, string password)
         {
             IUserAuthData user = _usersDataRepository.Authenticate(username, password).Result;
             if (user != null)
             {
-                string otp = _authenticationUtil.GenerateOneTimePasscode();
-                //TODO: store token in DB
+                DomainSecurityToken oneTimePassCode = _tokenBusinessService.CreateToken(user, TokenType.OneTimePasscode).Result;
 
-                if (!String.IsNullOrEmpty(otp))
+                if (oneTimePassCode is not null)
                 {
-                    return _emailerBusinessService.SendEmailWithToken(username, otp, TokenType.TwoFactorAuth).Result;
+                    return _emailerBusinessService.SendEmailWithToken(username, oneTimePassCode.UserToken, EmailType.TwoFactorAuthentication).Result;
                 }
             }
             return false;
@@ -46,7 +57,7 @@ namespace SAW.Web.Business.Service
 
         public async Task<User> TwoFactorLoginAsync(string token)
         {
-            AuthenticationToken authToken = null;
+            DomainSecurityToken authToken = null;
             User? user = null;
             if (!String.IsNullOrEmpty(token))
             {
@@ -85,7 +96,7 @@ namespace SAW.Web.Business.Service
                 Guid token = Guid.NewGuid();
                 if (token != Guid.Empty)
                 {
-                    await _emailerBusinessService.SendEmailWithToken(userAddRequest.UserName, token.ToString(), TokenType.NewUserConfirmation);
+                    await _emailerBusinessService.SendEmailWithToken(userAddRequest.UserName, token.ToString(), EmailType.NewUserConfirmation);
                 }
             }
             return userId;
